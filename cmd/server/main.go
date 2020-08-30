@@ -13,11 +13,11 @@ import (
 
 var (
 	flagAddr = kingpin.Flag("api.addr", "prometheus v1 api addr").
-		Default(":8080").
-		String()
+			Default(":8080").
+			String()
 	flagSnapshots = kingpin.Flag("snapshot", "snapshot to load ({name}={path})").
-		Short('s').
-		Strings()
+			Short('s').
+			Strings()
 )
 
 func main() {

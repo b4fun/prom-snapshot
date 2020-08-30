@@ -27,10 +27,10 @@ type Opts struct {
 	Reg prometheus.Registerer
 
 	// engine config
-	MaxSamples int
-	QueryTimeout time.Duration
+	MaxSamples       int
+	QueryTimeout     time.Duration
 	QueryConcurrency int
-	LookbackDelta time.Duration
+	LookbackDelta    time.Duration
 
 	// api config
 	CORSOrigin *regexp.Regexp
@@ -39,15 +39,15 @@ type Opts struct {
 // DefaultOpts creates default options from storage path.
 func DefaultOpts(storagePath string) *Opts {
 	opts := &Opts{
-		StoragePath:      storagePath,
+		StoragePath: storagePath,
 
 		Reg: prometheus.DefaultRegisterer,
 
 		// see prometheus/main.go
-		MaxSamples: 50000000,
-		QueryTimeout: 2 * time.Minute,
+		MaxSamples:       50000000,
+		QueryTimeout:     2 * time.Minute,
 		QueryConcurrency: 20,
-		LookbackDelta: 5 *time.Minute,
+		LookbackDelta:    5 * time.Minute,
 
 		CORSOrigin: nil,
 	}
@@ -60,11 +60,11 @@ func DefaultOpts(storagePath string) *Opts {
 
 func (o *Opts) newQueryEngine() *promql.Engine {
 	engineOpts := promql.EngineOpts{
-		Logger:             log.With(o.Logger, "component", "query engine"),
-		Reg:                o.Reg,
-		MaxSamples:         o.MaxSamples,
-		Timeout:            o.QueryTimeout,
-		LookbackDelta:      o.LookbackDelta,
+		Logger:        log.With(o.Logger, "component", "query engine"),
+		Reg:           o.Reg,
+		MaxSamples:    o.MaxSamples,
+		Timeout:       o.QueryTimeout,
+		LookbackDelta: o.LookbackDelta,
 		ActiveQueryTracker: promql.NewActiveQueryTracker(
 			o.StoragePath, o.QueryConcurrency,
 			log.With(o.Logger, "component", "activeQuerytracker"),
@@ -134,7 +134,7 @@ func (o *Opts) RegisterV1API(prefix string, mux HTTPMux) error {
 	h.Register(router)
 
 	prefix = fmt.Sprintf("%s/api/v1", prefix)
-	mux.Handle(prefix + "/", http.StripPrefix(prefix, router))
+	mux.Handle(prefix+"/", http.StripPrefix(prefix, router))
 
 	return nil
 }
