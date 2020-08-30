@@ -2,6 +2,11 @@
 
 Prometheus snapshot(s) viewer.
 
+| Resource | Link |
+|:----|:----|
+| Reference | [![API](https://godoc.org/github.com/b4fun/prom-snapshot?status.svg)](https://pkg.go.dev/github.com/b4fun/prom-snapshot?tab=overview) |
+| Docker Image | ![Docker Build Status](https://img.shields.io/docker/build/b4fun/prom-snapshot-server) |
+
 ## Usage
 
 ### Host multiple prometheus data snapshot with v1 api
