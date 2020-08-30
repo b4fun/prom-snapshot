@@ -17,6 +17,13 @@ $ curl http://127.0.0.1:8080/snapshot2/api/v1/metadata
 {"status":"success","data":{}}
 ```
 
+## TODO
+
+- [ ] build
+- [ ] docker image + kubernetes
+- [ ] bundle grafana?
+- [ ] (long term) download snapshot from remote
+
 ## LICENSE
 
 MIT
