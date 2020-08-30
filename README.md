@@ -25,6 +25,7 @@ $ curl http://127.0.0.1:8080/snapshot2/api/v1/metadata
 ## TODO
 
 - [ ] kubernetes spec
+- [ ] e2e usage example
 - [ ] bundle grafana?
 - [ ] (long term) download snapshot from remote
 
