@@ -129,6 +129,7 @@ func (o *Opts) RegisterV1API(prefix string, mux HTTPMux) error {
 		nil, nil,
 	)
 
+	// TODO(hbc): block non-read api endpoints (i.e. snapshot...)
 	router := route.New()
 	h.Register(router)
 
