@@ -8,6 +8,8 @@ import (
 
 	"github.com/b4fun/battery/archive"
 	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/promclient"
+	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/storage"
+	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/storage/azblob"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -23,6 +25,9 @@ var (
 	flagPrometheusSnapshotsDir = kingpin.Flag("prom.snapshots-dir", "prometheus snapshots data dir").
 					Default("/prometheus/data/snapshots").
 					String()
+	flagAzBlobContainerURL = kingpin.Flag("storage.azblob-container-url", "azblob container url").
+				Required().
+				String()
 )
 
 func main() {
@@ -37,11 +42,22 @@ func main() {
 
 	createPromClient := promclient.ClientOption{
 		BaseURL: *flagPrometheusAPIBase,
-		Logger:  logger.WithField("component", "promclient"),
+		Logger:  logger.WithField("component", "promClient"),
 	}
 	promClient, err := createPromClient.Create()
 	if err != nil {
 		kingpin.Fatalf("create prometheus api client: %w", err)
+		return
+	}
+
+	createAzBlob := &azblob.StorageOption{
+		Logger:                logger.WithField("component", "storage.azBlob"),
+		ServicePrincipalToken: azblob.CreateServincePrincipalTokenFromEnvironment,
+		ContainerURL:          *flagAzBlobContainerURL,
+	}
+	azBlob, err := createAzBlob.Create()
+	if err != nil {
+		kingpin.Fatalf("create azblob storage: %s", err)
 		return
 	}
 
@@ -52,6 +68,7 @@ func main() {
 			logger.WithField("component", "httpServer"),
 			*flagPrometheusSnapshotsDir,
 			promClient,
+			azBlob,
 		),
 	)
 
@@ -64,7 +81,7 @@ func main() {
 
 type snapshotResponse struct {
 	Error       string `json:"error,omitempty"`
-	ArtifactURL string `json:"artifactURL,omitempty`
+	ArtifactURL string `json:"artifactURL,omitempty"`
 }
 
 func responseErr(rw http.ResponseWriter, err error) {
@@ -81,6 +98,7 @@ func newSnapshotHandler(
 	logger logrus.FieldLogger,
 	snapshotsDir string,
 	promClient promclient.Client,
+	uploader storage.Uploader,
 ) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		createSnapshot, err := promClient.CreateSnapshot(r.Context())
@@ -93,22 +111,33 @@ func newSnapshotHandler(
 		snapshotFullPath := filepath.Join(snapshotsDir, createSnapshot.SnapshotName)
 		logger.Infof("created snapshot at %s", snapshotFullPath)
 
-		var snapshotArchive bytes.Buffer
+		snapshotArchive := new(bytes.Buffer)
 		createArchive := &archive.CreateZipArchive{
 			SourceDir: snapshotFullPath,
+			// under data dir
+			BasePath: "data",
 		}
-		if err := createArchive.CompressTo(&snapshotArchive); err != nil {
+		if err := createArchive.CompressTo(snapshotArchive); err != nil {
 			logger.Errorf("create snapshot archive failed: %s", err)
 			responseErr(rw, err)
 			return
 		}
 
-		// TODO: upload
+		artifactURL, err := uploader.UploadStream(
+			r.Context(),
+			snapshotArchive, createSnapshot.SnapshotName,
+		)
+		if err != nil {
+			logger.Errorf("upload snapshot archive failed: %s", err)
+			responseErr(rw, err)
+			return
+		}
+		logger.Infof("uploaded snapshot to %s", artifactURL)
 
 		rw.Header().Add("Content-Type", "application/json")
 		rw.WriteHeader(http.StatusOK)
 		resp := snapshotResponse{
-			ArtifactURL: snapshotFullPath,
+			ArtifactURL: artifactURL,
 		}
 		_ = json.NewEncoder(rw).Encode(resp)
 	})
