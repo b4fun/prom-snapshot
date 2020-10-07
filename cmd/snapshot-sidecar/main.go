@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"path/filepath"
 
+	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/archive"
 	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/promclient"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -90,6 +92,18 @@ func newSnapshotHandler(
 
 		snapshotFullPath := filepath.Join(snapshotsDir, createSnapshot.SnapshotName)
 		logger.Infof("created snapshot at %s", snapshotFullPath)
+
+		var snapshotArchive bytes.Buffer
+		createArchive := &archive.CreateZipArchive{
+			Logger:      logger,
+			SnapshotDir: snapshotFullPath,
+		}
+		if err := createArchive.CreateTo(&snapshotArchive); err != nil {
+			logger.Errorf("create snapshot archive failed: %s", err)
+			responseErr(rw, err)
+			return
+		}
+
 		// TODO: upload
 
 		rw.Header().Add("Content-Type", "application/json")
