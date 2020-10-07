@@ -14,6 +14,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
+const queryParameterArtifactName = "x-artifact-name"
+
 var (
 	flagDebug = kingpin.Flag("debug", "debug?").Default("false").Bool()
 	flagAddr  = kingpin.Flag("api.addr", "snapshot sidecar listen addr").
@@ -123,10 +125,12 @@ func newSnapshotHandler(
 			return
 		}
 
-		artifactURL, err := uploader.UploadStream(
-			r.Context(),
-			snapshotArchive, createSnapshot.SnapshotName,
-		)
+		artifactName := createSnapshot.SnapshotName
+		if v := r.URL.Query().Get(queryParameterArtifactName); v != "" {
+			artifactName = v
+		}
+
+		artifactURL, err := uploader.UploadStream(r.Context(), snapshotArchive, artifactName)
 		if err != nil {
 			logger.Errorf("upload snapshot archive failed: %s", err)
 			responseErr(rw, err)
