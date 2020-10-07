@@ -33,9 +33,6 @@ $ curl http://127.0.0.1:8080/snapshot2/api/v1/metadata
 
 **snapshot-sidecar**
 
-- [ ] azure storage backend
-- [ ] archive snapshot
-- [ ] upload to backend
 - [ ] kubernetes spec
 
 ## LICENSE
