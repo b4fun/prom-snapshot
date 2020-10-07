@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
+	"path/filepath"
 
 	"github.com/b4fun/prom-snapshot/pkg/snapshotsidecar/promclient"
 	"github.com/sirupsen/logrus"
@@ -44,19 +46,57 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(
 		"/api/v1/admin/tsdb/snapshot",
-		newSnapshotHandler(*flagPrometheusSnapshotsDir, promClient),
+		newSnapshotHandler(
+			logger.WithField("component", "httpServer"),
+			*flagPrometheusSnapshotsDir,
+			promClient,
+		),
 	)
 
+	logger.Infof("http server started at %s", *flagAddr)
 	if err := http.ListenAndServe(*flagAddr, mux); err != nil {
 		kingpin.Fatalf("server http: %s", err)
 		return
 	}
 }
 
+type snapshotResponse struct {
+	Error       string `json:"error,omitempty"`
+	ArtifactURL string `json:"artifactURL,omitempty`
+}
+
+func responseErr(rw http.ResponseWriter, err error) {
+	rw.Header().Add("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusInternalServerError)
+
+	rv := snapshotResponse{
+		Error: err.Error(),
+	}
+	_ = json.NewEncoder(rw).Encode(rv)
+}
+
 func newSnapshotHandler(
+	logger logrus.FieldLogger,
 	snapshotsDir string,
 	promClient promclient.Client,
 ) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		createSnapshot, err := promClient.CreateSnapshot(r.Context())
+		if err != nil {
+			logger.Errorf("create snapshot failed: %s", err)
+			responseErr(rw, err)
+			return
+		}
+
+		snapshotFullPath := filepath.Join(snapshotsDir, createSnapshot.SnapshotName)
+		logger.Infof("created snapshot at %s", snapshotFullPath)
+		// TODO: upload
+
+		rw.Header().Add("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusOK)
+		resp := snapshotResponse{
+			ArtifactURL: snapshotFullPath,
+		}
+		_ = json.NewEncoder(rw).Encode(resp)
 	})
 }
