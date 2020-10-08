@@ -121,6 +121,7 @@ github.com/aws/aws-sdk-go v1.33.5/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/b4fun/battery/archive v0.0.0-20201007102957-f286d2e855e5 h1:hafiQn4MItItaL1oMnprVnrnwpRX7nUFqjNLh7If82U=
 github.com/b4fun/battery/archive v0.0.0-20201007102957-f286d2e855e5/go.mod h1:Ok9rje+D5QMhdM1HjoYNZyYvkUd8fkhL5dgKR6wYhFg=
+github.com/b4fun/battery/archive v0.1.0/go.mod h1:Ok9rje+D5QMhdM1HjoYNZyYvkUd8fkhL5dgKR6wYhFg=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
